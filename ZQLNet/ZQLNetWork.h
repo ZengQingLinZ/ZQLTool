@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-
+#import <UIKit/UIKit.h>
 
 //宏定义成功block 回调成功后得到的信息
 typedef void (^HttpSuccess)(id data);

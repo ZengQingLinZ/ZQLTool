@@ -7,16 +7,14 @@
 //
 
 #import "ZQLNetWork.h"
-#import "AFNetworking.h"
-#import "JSTabbarViewController.h"
-#import "ZQLLoginViewController.h"
+#import <AFNetworking/AFNetworking.h>
 
 @implementation ZQLNetWork
 
 
 //GET请求
 +(void)getWithUrlString:(NSString *)urlString parameters:(NSDictionary *)parameters sessionid:(NSString *)sessionid success:(HttpSuccess)success failure:(HttpFailure)failure {
-    ZQLog(@"GET参数:%@ URL:%@",parameters,urlString);
+    NSLog(@"GET参数:%@ URL:%@",parameters,urlString);
     [UIApplication sharedApplication].networkActivityIndicatorVisible=YES;
     //创建请求管理者
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
@@ -44,7 +42,7 @@
 
 //POST请求
 +(void)postWithUrlString:(NSString *)urlString parameters:(NSDictionary *)parameters sessionid:(NSString *)sessionid success:(HttpSuccess)success failure:(HttpFailure)failure {
-    ZQLog(@"请求URL:%@ POST参数:%@",urlString,parameters);
+    NSLog(@"请求URL:%@ POST参数:%@",urlString,parameters);
     [UIApplication sharedApplication].networkActivityIndicatorVisible=YES;
     
     //创建请求管理者
@@ -69,19 +67,9 @@
     [manager POST:urlString parameters:parameters  success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         
         NSDictionary *netDic=[NSJSONSerialization JSONObjectWithData:responseObject options:NSJSONReadingAllowFragments|NSJSONReadingMutableLeaves error:nil];
-        if ([netDic[@"ret"] intValue]==401) {
-            [MBProgressHUD showALTMessage:@"你的帐号在其它地方登录" toView:appdelegate.window];
-            [ZQLToolClass clearPartUserDefaultsData:@[@"device_id",@"password",@"account"]];
-            if (![[ZQLToolClass topViewController] isKindOfClass:[ZQLLoginViewController class]]) {
-               [appdelegate setupLoginViewController:[ZQLToolClass topViewController]];
-            }
-            success(netDic);
-        }else{
-            success(netDic);
-        }
-        
+
+        success(netDic);
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-        [MBProgressHUD showALTMessage:@"连接服务器失败,请检查网络!" toView:appdelegate.window];
         failure(error);
     }];
     
@@ -118,14 +106,10 @@
 //上传图片(单张)
 +(void)uploadPhotoAndController:(UIViewController *)controller WithSize:(CGSize)size Image:(UIImage*)image urlString:(NSString *)urlString parameters:(NSDictionary *)param imageKey:(NSString *)imageKey success:(HttpSuccess)success failure:(HttpFailure)failure
 {
-    MBProgressHUD *HUD;
-    //加载提示菊花
-    if(controller){
-        HUD=[MBProgressHUD showMessage:@"图片上传中..." toView:controller.view];
-    }
+
     //1. 存放图片的服务器地址，这里我用的宏定义
     //    NSString * url = [NSString stringWithFormat:@"%@%@",Hx_Main_heard_API,IMAGE_UPLOAD_URL_API];
-    UIImage *newimg=[UIImage thumbnailWithImageWithoutScale:image size:size];
+    //UIImage *newimg=[UIImage thumbnailWithImageWithoutScale:image size:size];
     
     //2. 利用时间戳当做图片名字
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
@@ -134,7 +118,7 @@
     NSString *fileName = [NSString stringWithFormat:@"%@.jpg",imageName];
     
     //3. 图片二进制文件
-    NSData *imageData = UIImageJPEGRepresentation(newimg, 0.7f);
+    NSData *imageData = UIImageJPEGRepresentation(image, 0.7f);
     NSLog(@"upload image size: %ld k", (long)(imageData.length / 1024));
     
     //4. 发起网络请求
@@ -158,32 +142,26 @@
         
     } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         //上传成功时的回调
-        
-        [HUD hide:YES];
+    
         success(responseObject);
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         //失败时的回调
         failure(error);
-        [HUD hide:YES];
-        [MBProgressHUD showALTMessage:@"上传失败" toView:controller.view];
+     
     }];
 }
 
 //传图片流
 + (void)upImagesWithArray :(NSArray *)imageArr :(UIViewController *)controller urlString:(NSString *)urlString parameters:(NSDictionary *)param imageKey:(NSString *)imageKey success:(HttpSuccess)success failure:(HttpFailure)failure{
     
-    MBProgressHUD *HUD;
-    //加载提示菊花
-    if(controller){
-        HUD=[MBProgressHUD showMessage:@"图片上传中..." toView:controller.view];
-    }
+
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
     manager.responseSerializer = [AFHTTPResponseSerializer serializer];
     manager.responseSerializer = [AFJSONResponseSerializer serializer];
     
     manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json",@"text/json",@"text/javascript",@"text/html", nil];
     
-    [manager POST:[httpServer stringByAppendingString:urlString] parameters:param constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
+    [manager POST:urlString parameters:param constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
         
         
         // 上传 多张图片
