@@ -14,7 +14,7 @@ podspec_file_name = 'ZQLNetWork.podspec'
 
 # ==================================================================
 
-new_tag = '0.0.1'
+new_tag = ""
 spec_file_path = "./" + podspec_file_name
 find_version_flag = False
 
